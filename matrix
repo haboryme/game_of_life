@@ -1,0 +1,44 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package game_of_life;
+//import javax.swing.JOptionPane;
+//import java.util.Map
+/**
+ *
+ * @author Michael
+ */
+import java.io.*;
+import java.util.Arrays;
+class Game_of_life {
+ 
+    public int[][] petri_map(int a, int b,int posi, int posj) {
+        int[][] array_map = new int[a][b];
+        array_map[posi][posj] = 1;
+        return array_map;
+    }
+     
+    public static void main(String args[]) throws IOException {
+        Game_of_life mapping = new Game_of_life();
+        int a,b,posi,posj;
+        BufferedReader din = new BufferedReader(new InputStreamReader(System.in)); //read input from console 1 at a time
+        System.out.println("Enter the size of the petri dish, height: ");
+        a=Integer.parseInt(din.readLine());
+        System.out.println("Enter the size of the petri dish, width: ");
+        b=Integer.parseInt(din.readLine());
+        System.out.println("Enter the position of the cell i: ");
+        posi=Integer.parseInt(din.readLine());
+        System.out.println("Enter the position of the cell j: ");
+        posj=Integer.parseInt(din.readLine());
+        int[][] petri_map_result = mapping.petri_map(a,b,posi,posj);
+        for (int i = 0; i < petri_map_result.length; i++) {
+            for (int j = 0; j < petri_map_result[i].length; j++) {
+            System.out.print(petri_map_result[i][j] + " ");
+            }
+        System.out.println();
+        }
+  }
+}
+
