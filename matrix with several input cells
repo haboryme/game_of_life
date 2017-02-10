@@ -1,0 +1,74 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package game_of_life;
+//import javax.swing.JOptionPane;
+//import java.util.Map
+/**
+ *
+ * @author Michael
+ */
+import java.io.*;
+import java.util.Arrays;
+class Game_of_life {
+ //method that defines the size of the petri dish and the initial position of the cells
+    public int[][] petri_map(int a, int b, int n, int[] posi, int[] posj, int[] type_cell) { 
+        int[][] array_map = new int[a][b]; //create an matrix: 2D array of dim a*b
+        for(int i=0;i<n;i++){
+            array_map[posi[i]][posj[i]] = type_cell[i]; //change the value of
+        }
+        return array_map;
+    }
+     
+    public static void main(String args[]) throws IOException {
+        Game_of_life mapping = new Game_of_life();
+        int a,b; // integers for the dimension of the petri dish
+        int n; //integer for the number of initial cells
+        BufferedReader din = new BufferedReader(new InputStreamReader(System.in)); //read input from console 1 at a time
+        System.out.println("Enter the size of the petri dish, height: ");
+        a=Integer.parseInt(din.readLine());
+        System.out.println("Enter the size of the petri dish, width: ");
+        b=Integer.parseInt(din.readLine());
+        System.out.println("Enter the number of initial cells n: ");
+        n=Integer.parseInt(din.readLine());
+        int[] posi = new int[n]; //array containing the i position of the n cells
+        int[] posj = new int[n]; //array containing the j position of the n cells
+        int[] type_cell = new int[n]; // array containing the type of the n cells
+        for(int i=0;i<n;i++){
+            System.out.println("Enter the type of the cell number "+i);
+            type_cell[i] = Integer.parseInt(din.readLine());
+            while(type_cell[i]==0){
+                System.out.println("The type can't be "+0);
+                System.out.println("Enter the type of the cell number "+i);
+                type_cell[i] = Integer.parseInt(din.readLine());
+            }
+            System.out.println("Enter the position of the cell number "+i+" on the rows");
+            posi[i] = Integer.parseInt(din.readLine());
+            while(posi[i]>=a){
+                System.out.println("This position can't be >= "+a);
+                System.out.println("Enter the position of the cell number "+i+" on the rows");
+                posi[i] = Integer.parseInt(din.readLine());
+            }
+            System.out.println("Enter the position of the cell number "+i+" on the columns");
+            posj[i] = Integer.parseInt(din.readLine());
+            while(posj[i]>=b){
+                System.out.println("This position can't be >= "+b);
+                System.out.println("Enter the position of the cell number "+i+" on the columns");
+                posj[i] = Integer.parseInt(din.readLine());
+            }    
+        }
+        
+        int[][] petri_map_result = mapping.petri_map();
+        for (int i = 0; i < petri_map_result.length; i++) {
+            for (int j = 0; j < petri_map_result[i].length; j++) {
+            System.out.print(petri_map_result[i][j] + " ");
+            }
+        System.out.println();
+        }
+  }
+}
+
+
+
