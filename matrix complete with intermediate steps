@@ -1,0 +1,331 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package game_of_life;
+//import javax.swing.JOptionPane;
+//import java.util.Map
+/**
+ *
+ * @author Michael
+ */
+import java.io.*;
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Random;
+import java.util.LinkedHashSet;
+import java.util.concurrent.ThreadLocalRandom;
+
+
+class Game_of_life {
+    // global random number
+    static Random rand_number = new Random();
+ //method that defines the size of the petri dish and the initial position of the cells
+    public int[][] petri_map(int a, int b, int n, int[] posi, int[] posj, int[] type_cell) { 
+        int[][] array_map = new int[a+2][b+2]; //create an matrix: 2D array of dim a*b
+        for(int i=0;i<n;i++){
+            array_map[posi[i]][posj[i]] = type_cell[i]; //change the value 0 to the type of the ith cell at its position
+        }
+        return array_map;
+    }
+    //method for outputting the petri dish map after computing survival
+    public int[][] survival(int a, int b, int[][] petri_map_initial,int[][] petri_map_age) { 
+        int[][] petri_map_survi = new int[a+2][b+2];
+        //check each cell and compute survival
+        for (int i = 1; i <= a; i++) {
+            for (int j = 1; j <= b; j++) {
+                int randomNum = ThreadLocalRandom.current().nextInt(1, 101);
+                int type_at_position = petri_map_initial[i][j];
+                int age_at_position = petri_map_age[i][j];
+                if(randomNum>(100-survival_rate_comp(type_at_position,age_at_position))){ //based on the draw and the survival rate decides if survival =0/1
+                    petri_map_survi[i][j] = petri_map_initial[i][j];
+                }else{
+                    petri_map_survi[i][j] = 0;
+                }
+            }
+        }
+        return petri_map_survi;
+    }
+    
+    public int[][] reproduction(int a, int b, int[][] petri_map_initial,int[][]petri_map_age){
+        int[][] petri_map_repro = new int[a+2][b+2];
+        for (int i = 1; i <= a; i++) { //for each row
+            for (int j = 1; j <= b; j++) { //for each column
+                if(petri_map_initial[i][j]==0){ //repro can only occur if the cell is not already colonized
+                    ArrayList<Integer> list_repro = new ArrayList();
+                    //check the 4 positions around the cell
+                    int [] neighbor_i = {-1,0,0,1};
+                    int [] neighbor_j = {0,1,-1,0};
+                    Iterator<Integer> i1 = IntStream.of(neighbor_i).boxed().iterator();
+                    Iterator<Integer> i2 = IntStream.of(neighbor_j).boxed().iterator();
+                    while (i1.hasNext() && i2.hasNext()) {
+                        int next_i = i1.next();
+                        int next_j = i2.next();
+                        if(reproduction_rate_comp(petri_map_initial[i+next_i][j+next_j],petri_map_age[i+next_i][j+next_j])!=0){ //if output of reproduction is !=0
+                                list_repro.add(reproduction_rate_comp(petri_map_initial[i+next_i][j+next_j],petri_map_age[i+next_i][j+next_j])); //then add the type to the list
+                         }
+                    }
+                    list_repro = new ArrayList<Integer>(new LinkedHashSet<>(list_repro)); //only keep unique value of the list
+                    if(list_repro.isEmpty()){
+                        petri_map_repro[i][j] = 0;
+                    }else{
+                        petri_map_repro[i][j] = list_repro.get(rand_number.nextInt(list_repro.size())); //select a random value of the list and add it into petri_map_repro
+                    }
+                }else{
+                    petri_map_repro[i][j] =petri_map_initial[i][j];
+                }
+            }
+        }
+        return petri_map_repro;
+    }
+    
+    //method defining the survival of each type
+    public int survival_rate_comp(int type_at_position,int petri_map_age){
+        int survival_rate = 0; //default survival_rate = 0
+        switch (type_at_position) {
+            case 0:  survival_rate = 0;
+                     break;
+            case 1:  if(petri_map_age >=3){
+                survival_rate=75;}
+            else{
+                survival_rate = 100;
+            }
+                    break;
+            case 2:  if(petri_map_age >=0){
+                survival_rate=75;}
+            else{
+                survival_rate = 100;
+            }
+                    break;
+            case 3:  if(petri_map_age >=4){
+                survival_rate = 33;}
+            else{
+                survival_rate = 75;
+            }
+                    break;        
+        }
+        return survival_rate;
+    }
+    // ONLY DEFINED FOR TYPE 0 1 OR 2
+    public int reproduction_rate_comp(int type_at_position,int petri_map_age){
+        int reproduction_rate = 0; //defaut reproduction_rate = 0
+        int randomNum = ThreadLocalRandom.current().nextInt(0, 100);
+        //Reproduction parameters
+        switch (type_at_position) {
+            //empty cell = NO reproduction
+            case 0:  reproduction_rate = 0;
+                     break;
+            //type 1: reproduction 100% only if age>2         
+            case 1:  if(petri_map_age >=3){
+                reproduction_rate=100;
+            }else{
+                reproduction_rate=0;
+            }
+                     break;
+            //type 2: reproduction regardless of age at 51%         
+            case 2:  if(petri_map_age >=0){
+                reproduction_rate=51;
+            }else{
+                reproduction_rate=0;
+            }
+                    break;
+            //type 3: reproduction at 20 then 80% when 2+age 
+            case 3:  if(petri_map_age >=2){
+                reproduction_rate=80;
+            }else{
+                reproduction_rate=20;
+            }
+                    break;
+        }
+        int repro_event; //variable 0 or 1 if repro occurs
+        if(reproduction_rate>randomNum){
+            repro_event = type_at_position;
+        }else{
+            repro_event = 0;
+        }
+        return repro_event;
+    } 
+    public int[][] merged_map(int a, int b, int[][] petri_map_initial, int[][]petri_map_final_repro, int[][] petri_map_final_survi){
+        int[][] merged_map = new int[a+2][b+2];
+        for (int i = 1; i <= a; i++) { //for each row
+            for (int j = 1; j <= b; j++) { //for each column
+                merged_map[i][j] = petri_map_final_repro[i][j];
+                if(petri_map_initial[i][j] != petri_map_final_survi[i][j]){
+                    merged_map[i][j] = petri_map_final_survi[i][j];
+                }
+            }
+        }   
+        return merged_map;
+    }
+    public static void main(String args[]) throws IOException {
+        Game_of_life mapping = new Game_of_life();
+        int a,b; // integers for the dimension of the petri dish
+        int n; //integer for the number of initial cells
+        BufferedReader din = new BufferedReader(new InputStreamReader(System.in)); //read input from console 1 at a time
+        // Definition of the size of the petri dish
+        System.out.println("Enter the size of the petri dish, number of rows: ");
+        a=Integer.parseInt(din.readLine());
+        System.out.println("Enter the size of the petri dish, number of columns: ");
+        b=Integer.parseInt(din.readLine());
+        // Definition of the number of cells
+        System.out.println("Enter the number of initial cells n: ");
+        n=Integer.parseInt(din.readLine());
+        int[] posi = new int[n]; //array containing the i position of the n cells
+        int[] posj = new int[n]; //array containing the j position of the n cells
+        int[] type_cell = new int[n]; // array containing the type of the n cells
+        //for each of the cell ask for its type - row position - column position
+        for(int i=0;i<n;i++){
+            System.out.println("Enter the type of the cell number "+(i+1));
+            type_cell[i] = Integer.parseInt(din.readLine());
+            while(type_cell[i]==0){ //verify that the cell isn't of type 0 which is the empty state
+                System.out.println("The type can't be "+0);
+                System.out.println("Enter the type of the cell number "+(i+1));
+                type_cell[i] = Integer.parseInt(din.readLine());
+            }
+            System.out.println("Enter the position of the cell number "+(i+1)+" on the rows (base 1 index)");
+            posi[i] = Integer.parseInt(din.readLine());
+            while(posi[i]>a){ //verifiy that the position is within the range (0 indexing)
+                System.out.println("This position can't be > "+a);
+                System.out.println("Enter the position of the cell number "+(i+1)+" on the rows (base 1 index)");
+                posi[i] = Integer.parseInt(din.readLine());
+            }
+            System.out.println("Enter the position of the cell number "+(i+1)+" on the columns (base 1 index)");
+            posj[i] = Integer.parseInt(din.readLine());
+            while(posj[i]>b){ //verifiy that the position is within the range (0 indexing)
+                System.out.println("This position can't be > "+b);
+                System.out.println("Enter the position of the cell number "+(i+1)+" on the columns (base 1 index)");
+                posj[i] = Integer.parseInt(din.readLine());
+            }    
+        }
+        //Type parameters
+        System.out.println("Set parameters for the types: Y/N");
+        
+        if(din.readLine()=="Y"){
+            
+        }
+                
+        // create the initial petri dish of size a*b with the n cells
+        int[][] petri_map_initial = mapping.petri_map(a, b, n, posi, posj, type_cell);
+        //print to stdout the matrix of the petri dish initial without the border
+        System.out.println("##### INITIAL PETRI DISH #####");  
+        for (int i = 1; i <=a; i++) {
+            for (int j = 1; j <=b; j++) {
+            System.out.print(petri_map_initial[i][j] + " ");
+            }
+        System.out.println();
+        }
+        int cycles; //number of cycles that will be realized
+        System.out.println("Enter the number of cycles");
+        cycles = Integer.parseInt(din.readLine());
+        while(cycles<=0){ //verifiy that the number of iteration is greater than 0
+            System.out.println("This value must be greater than 0");
+            System.out.println("Enter the number of cycles");
+            cycles = Integer.parseInt(din.readLine());
+        }
+        //initiate the map of the age
+        int[][] petri_map_age = new int[a+2][b+2];
+        System.out.println("##### AFTER SURVIVAL #####");    
+        // create the final petri dish of size a*b with the n cells
+        int[][] petri_map_final_survi = mapping.survival(a, b,petri_map_initial,petri_map_age);
+        //print to stdout the matrix of the petri dish initial
+        for (int i = 1; i <=a; i++) {
+            for (int j = 1; j <=b; j++) {
+            System.out.print(petri_map_final_survi[i][j] + " ");
+            }
+        System.out.println();
+        }
+        System.out.println("##### AFTER REPRO #####");
+        int[][] petri_map_final_repro = mapping.reproduction(a, b,petri_map_initial,petri_map_age);
+        //print to stdout the matrix of the petri dish initial
+        for (int i = 1; i <=a; i++) {
+            for (int j = 1; j <=b; j++) {
+            System.out.print(petri_map_final_repro[i][j] + " ");
+            }
+        System.out.println();
+        }
+        System.out.println("##### AFTER MERGE #####");
+        int[][] petri_map_final_merge = mapping.merged_map(a, b, petri_map_initial, petri_map_final_repro, petri_map_final_survi);
+        //print to stdout the matrix of the petri dish initial
+        for (int i = 1; i <=a; i++) {
+            for (int j = 1; j <=b; j++) {
+            System.out.print(petri_map_final_merge[i][j] + " ");
+            }
+        System.out.println();
+        }
+        //update age map
+    //    System.out.println("##### 1S AGE MAP #####");
+        for (int i = 1; i <=a; i++) {
+            for (int j = 1; j <=b; j++) {
+                if(petri_map_final_merge[i][j]!=petri_map_initial[i][j] || petri_map_final_merge[i][j]==0){ //if there is a change with the initial map
+                    petri_map_age[i][j]=0; //then reset age
+                }else{
+                    petri_map_age[i][j]++; //else increment
+                }
+    //            System.out.print(petri_map_age[i][j] + " ");
+            }
+    //    System.out.println();
+        }
+        if(cycles>=2){
+            for(int c=1;c<cycles;c++){
+                petri_map_initial=petri_map_final_merge;
+            //    System.out.println("##### AFTER SURVIVAL #####"+(c+1));    //
+                // create the final petri dish of size a*b with the n cells
+                petri_map_final_survi = mapping.survival(a, b,petri_map_initial,petri_map_age);
+                //print to stdout the matrix of the petri dish initial
+            //    for (int i = 1; i <=a; i++) {//
+            //        for (int j = 1; j <=b; j++) {//
+            //        System.out.print(petri_map_final_survi[i][j] + " ");//
+            //        }//
+            //    System.out.println();//
+            //    }//
+            //    System.out.println("##### AFTER REPRO #####"+(c+1));//
+                petri_map_final_repro = mapping.reproduction(a, b,petri_map_initial,petri_map_age);
+                //print to stdout the matrix of the petri dish initial
+            //    for (int i = 1; i <=a; i++) {//
+            //        for (int j = 1; j <=b; j++) {//
+            //        System.out.print(petri_map_final_repro[i][j] + " ");//
+            //        }//
+            //    System.out.println();//
+            //    }//
+                System.out.println("##### AFTER CYCLE NUMBER "+(c+1)+" #####");
+                petri_map_final_merge = mapping.merged_map(a, b, petri_map_initial, petri_map_final_repro, petri_map_final_survi);
+                //mapcount of the number of cells occupied by each type
+                HashMap<Integer, Integer> map_stats = new HashMap();
+                //print the final map of the petri dish
+                //scan the array and add each type to the hashmap and increases the count if type already in
+                //update age map
+                for (int i = 1; i <=a; i++) {
+                    for (int j = 1; j <=b; j++) {
+                        System.out.print(petri_map_final_merge[i][j] + " ");
+                        if(map_stats.containsKey(petri_map_final_merge[i][j])){
+                            map_stats.put(petri_map_final_merge[i][j],map_stats.get(petri_map_final_merge[i][j])+1);
+                        }else{
+                            map_stats.put(petri_map_final_merge[i][j],1);
+                        }
+                        if(petri_map_final_merge[i][j]!=petri_map_initial[i][j] || petri_map_final_merge[i][j]==0){ //if there is a change with the initial map
+                            petri_map_age[i][j]=0; //then reset age
+                        }else{
+                            petri_map_age[i][j]++; //else increment
+                        }
+                    }
+                System.out.println();
+                }
+                //System.out.println("OCCUPATION STATS BY TYPE");
+                map_stats.forEach((key, value) -> System.out.println(key + " : " + value));
+                //System.out.println("AGE MAP");
+                //for (int i = 1; i <=a; i++) {
+                //    for (int j = 1; j <=b; j++) {
+                //        System.out.print(petri_map_age[i][j] + " ");
+                //   }
+                //System.out.println();    
+                //}   
+            }
+        }
+  }
+}
+
+
+
